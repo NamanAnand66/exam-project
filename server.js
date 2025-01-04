@@ -11,12 +11,12 @@ const app = express();
 const server = createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*", // Allow all origins
+    origin: "*", 
     methods: ["GET", "POST"]
   }
 });
 
-// Serve static files
+
 app.use(express.static('dist'));
 
 io.on('connection', (socket) => {
