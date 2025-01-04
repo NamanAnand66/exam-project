@@ -1,21 +1,12 @@
-import { io } from 'socket.io-client';
-
-
-const socket = io(window.location.hostname === 'localhost'
-    ? 'http://localhost:3000'
-    : 'https://exam-project-r84y.onrender.com'); 
+import { socket } from './src/socket.js';
+import { DrawingManager } from './src/drawing.js';
 
 const canvas = document.getElementById('whiteboard');
-const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
 const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearBtn');
 
-let isDrawing = false;
-let lastX = 0;
-let lastY = 0;
-
-
+// Set canvas size
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight - document.querySelector('.toolbar').offsetHeight;
@@ -24,62 +15,60 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
+// Initialize drawing manager
+const drawingManager = new DrawingManager(canvas, socket);
 
-function draw(e) {
-    if (!isDrawing) return;
-
-    const rect = canvas.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-
-    ctx.beginPath();
-    ctx.moveTo(lastX, lastY);
-    ctx.lineTo(x, y);
-    ctx.strokeStyle = colorPicker.value;
-    ctx.lineWidth = brushSize.value;
-    ctx.lineCap = 'round';
-    ctx.stroke();
-
-    socket.emit('draw', {
-        x0: lastX,
-        y0: lastY,
-        x1: x,
-        y1: y,
-        color: colorPicker.value,
-        size: brushSize.value
-    });
-
-    [lastX, lastY] = [x, y];
-}
-
-
+// Event listeners
 canvas.addEventListener('mousedown', (e) => {
-    isDrawing = true;
+    drawingManager.isDrawing = true;
     const rect = canvas.getBoundingClientRect();
-    [lastX, lastY] = [e.clientX - rect.left, e.clientY - rect.top];
+    [drawingManager.lastX, drawingManager.lastY] = [
+        e.clientX - rect.left,
+        e.clientY - rect.top
+    ];
 });
 
-canvas.addEventListener('mousemove', draw);
-canvas.addEventListener('mouseup', () => isDrawing = false);
-canvas.addEventListener('mouseout', () => isDrawing = false);
+canvas.addEventListener('mousemove', (e) => drawingManager.handleDrawing(e));
+canvas.addEventListener('mouseup', () => drawingManager.isDrawing = false);
+canvas.addEventListener('mouseout', () => drawingManager.isDrawing = false);
+
+colorPicker.addEventListener('change', (e) => drawingManager.setColor(e.target.value));
+brushSize.addEventListener('change', (e) => drawingManager.setSize(e.target.value));
 
 clearBtn.addEventListener('click', () => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    drawingManager.clear();
     socket.emit('draw', { clear: true });
 });
 
+// Initialize color and size
+drawingManager.setColor(colorPicker.value);
+drawingManager.setSize(brushSize.value);
+
+// Socket events
+socket.on('connect', () => {
+    console.log('Connected to server');
+});
 
 socket.on('draw', (data) => {
     if (data.clear) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawingManager.clear();
         return;
     }
 
-    ctx.beginPath();
-    ctx.moveTo(data.x0, data.y0);
-    ctx.lineTo(data.x1, data.y1);
-    ctx.strokeStyle = data.color;
-    ctx.lineWidth = data.size;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+    drawingManager.draw(
+        data.x0,
+        data.y0,
+        data.x1,
+        data.y1,
+        data.color,
+        data.size
+    );
+});
+
+socket.on('disconnect', () => {
+    console.log('Disconnected from server');
+});
+
+socket.on('connect_error', (error) => {
+    console.error('Connection error:', error);
 });
