@@ -1,6 +1,10 @@
 import { io } from 'socket.io-client';
 
-const socket = io('http://localhost:3000');
+// Connect to the deployed server
+const socket = io(window.location.hostname === 'localhost'
+    ? 'http://localhost:3000'
+    : 'https://your-render-url.onrender.com'); // You'll replace this URL later
+
 const canvas = document.getElementById('whiteboard');
 const ctx = canvas.getContext('2d');
 const colorPicker = document.getElementById('colorPicker');
