@@ -1,9 +1,9 @@
 import { io } from 'socket.io-client';
 
-// Connect to the deployed server
+
 const socket = io(window.location.hostname === 'localhost'
     ? 'http://localhost:3000'
-    : 'https://your-render-url.onrender.com'); // You'll replace this URL later
+    : 'https://exam-project-r84y.onrender.com'); 
 
 const canvas = document.getElementById('whiteboard');
 const ctx = canvas.getContext('2d');
@@ -15,7 +15,7 @@ let isDrawing = false;
 let lastX = 0;
 let lastY = 0;
 
-// Set canvas size
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight - document.querySelector('.toolbar').offsetHeight;
@@ -24,7 +24,7 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// Drawing functions
+
 function draw(e) {
     if (!isDrawing) return;
 
@@ -52,7 +52,7 @@ function draw(e) {
     [lastX, lastY] = [x, y];
 }
 
-// Event listeners
+
 canvas.addEventListener('mousedown', (e) => {
     isDrawing = true;
     const rect = canvas.getBoundingClientRect();
@@ -68,7 +68,7 @@ clearBtn.addEventListener('click', () => {
     socket.emit('draw', { clear: true });
 });
 
-// Socket events
+
 socket.on('draw', (data) => {
     if (data.clear) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
