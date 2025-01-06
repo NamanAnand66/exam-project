@@ -6,7 +6,7 @@ const colorPicker = document.getElementById('colorPicker');
 const brushSize = document.getElementById('brushSize');
 const clearBtn = document.getElementById('clearBtn');
 
-// Set canvas size
+
 function resizeCanvas() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight - document.querySelector('.toolbar').offsetHeight;
@@ -15,10 +15,10 @@ function resizeCanvas() {
 resizeCanvas();
 window.addEventListener('resize', resizeCanvas);
 
-// Initialize drawing manager
+
 const drawingManager = new DrawingManager(canvas, socket);
 
-// Event listeners
+
 canvas.addEventListener('mousedown', (e) => {
     drawingManager.isDrawing = true;
     const rect = canvas.getBoundingClientRect();
@@ -40,11 +40,11 @@ clearBtn.addEventListener('click', () => {
     socket.emit('draw', { clear: true });
 });
 
-// Initialize color and size
+
 drawingManager.setColor(colorPicker.value);
 drawingManager.setSize(brushSize.value);
 
-// Socket events
+
 socket.on('connect', () => {
     console.log('Connected to server');
 });
